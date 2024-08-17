@@ -104,7 +104,7 @@ public class Snake {
         public Map<String, String> index() {
             Map<String, String> response = new HashMap<>();
             response.put("apiversion", "1");
-            response.put("author", ""); // TODO: Your Battlesnake Username
+            response.put("author", "Tanzkalmar35"); // TODO: Your Battlesnake Username
             response.put("color", "#888888"); // TODO: Personalize
             response.put("head", "default"); // TODO: Personalize
             response.put("tail", "default"); // TODO: Personalize
@@ -167,13 +167,11 @@ public class Snake {
             // Don't allow your Battlesnake to move back in on it's own neck
             avoidMyNeck(head, body, possibleMoves);
 
-            // TODO: Using information from 'moveRequest', find the edges of the board and
-            // don't
-            // let your Battlesnake move beyond them board_height = ? board_width = ?
+            // Don't move out of map
+            dontMoveOutOfMap(moveRequest, head, possibleMoves);
 
-            // TODO Using information from 'moveRequest', don't let your Battlesnake pick a
-            // move
-            // that would hit its own body
+            // Don't move into self
+            dontMoveIntoSelf(head.get("x").asInt(), head.get("y").asInt(), body, possibleMoves);
 
             // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
@@ -184,14 +182,69 @@ public class Snake {
             // piece of food on the board
 
             // Choose a random direction to move in
-            final int choice = new Random().nextInt(possibleMoves.size());
-            final String move = possibleMoves.get(choice);
+            final String move = possibleMoves.get(0);
 
             LOG.info("MOVE {}", move);
 
             Map<String, String> response = new HashMap<>();
             response.put("move", move);
             return response;
+        }
+
+        public void dontMoveOutOfMap(JsonNode moveRequest, JsonNode head, ArrayList<String> possibleMoves) {
+            int boardWidth = moveRequest.get("board").get("width").asInt();
+            int boardHeight = moveRequest.get("board").get("height").asInt();
+            int headX = head.get("x").asInt();
+            int headY = head.get("y").asInt();
+
+            if (headX == boardWidth - 1) {
+                possibleMoves.remove("right");
+            }
+            if (headX == 0) {
+                possibleMoves.remove("left");
+            }
+            if (headY == boardHeight - 1) {
+                possibleMoves.remove("up");
+            }
+            if (headY == 0) {
+                possibleMoves.remove("down");
+            }
+
+            LOG.info("Board Width: " + boardWidth);
+            LOG.info("Board height: " + boardHeight);
+            LOG.info("Head position x: " + headX);
+            LOG.info("Head position y: " + headY);
+            LOG.info("Moving: " + possibleMoves);
+        }
+
+        public void avoidOtherSnakes(JsonNode snakes) {
+        }
+
+        public void dontMoveIntoSelf(int headX, int headY, JsonNode body, ArrayList<String> possibleMoves) {
+            for (JsonNode part : body) {
+                int partX = part.get("x").asInt();
+                int partY = part.get("y").asInt();
+
+                if (partX == headX) {
+                    if (partY == headY - 1) {
+                        possibleMoves.remove("down");
+                    }
+                    if (partY == headY + 1) {
+                        possibleMoves.remove("up");
+                    }
+                }
+
+                if (partX == headX + 1) {
+                    possibleMoves.remove("right");
+                }
+
+                if (partX == headX - 1) {
+                    possibleMoves.remove("left");
+                }
+            }
+        }
+
+        public void pickFoodIfNeccessary() {
         }
 
         /**
