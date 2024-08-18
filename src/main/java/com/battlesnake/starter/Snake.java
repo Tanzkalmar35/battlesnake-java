@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import static spark.Spark.port;
 import static spark.Spark.post;
@@ -171,17 +170,23 @@ public class Snake {
             dontMoveOutOfMap(moveRequest, head, possibleMoves);
 
             // Don't move into self
-            dontMoveIntoSelf(head.get("x").asInt(), head.get("y").asInt(), body, possibleMoves);
+            // dontMoveIntoSelf(head.get("x").asInt(), head.get("y").asInt(), body,
+            // possibleMoves);
 
             // TODO: Using information from 'moveRequest', don't let your Battlesnake pick a
             // move
             // that would collide with another Battlesnake
+
+            avoidSnakes(moveRequest, possibleMoves);
 
             // TODO: Using information from 'moveRequest', make your Battlesnake move
             // towards a
             // piece of food on the board
 
             // Choose a random direction to move in
+
+            LOG.info("Possible Moves: {}", possibleMoves);
+
             final String move = possibleMoves.get(0);
 
             LOG.info("MOVE {}", move);
@@ -217,7 +222,15 @@ public class Snake {
             LOG.info("Moving: " + possibleMoves);
         }
 
-        public void avoidOtherSnakes(JsonNode snakes) {
+        public void avoidSnakes(JsonNode moveRequest, ArrayList<String> possibleMoves) {
+            JsonNode snakes = moveRequest.get("board").get("snakes");
+            for (JsonNode snake : snakes) {
+                dontMoveIntoSelf(
+                        snake.get("head").get("x").asInt(),
+                        snake.get("head").get("y").asInt(),
+                        snake.get("body"),
+                        possibleMoves);
+            }
         }
 
         public void dontMoveIntoSelf(int headX, int headY, JsonNode body, ArrayList<String> possibleMoves) {
